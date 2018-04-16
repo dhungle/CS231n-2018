@@ -1,5 +1,6 @@
 import numpy as np
 from collections import Counter
+import time
 
 class KNearestNeighbor(object):
   """ a kNN classifier with L2 distance """
@@ -91,17 +92,17 @@ class KNearestNeighbor(object):
     num_test = X.shape[0]
     num_train = self.X_train.shape[0]
     dists = np.zeros((num_test, num_train))
-    # calculate (x - y)^2 = x^2 + y^2 - 2xy
-    X_train_sqr = self.X_train ** 2
+    # np.sum((x_train - x)^2) = np.sum(x_train^2 + x^2 - 2x_train * x) = np.sum of each
+    X_train_square = np.sum(self.X_train ** 2, axis=1)
     for i in range(num_test):
       #######################################################################
       # TODO:                                                               #
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      #dists[i, :] = np.sum((self.X_train - X[i, :])**2, axis=1)
-      dot_product = np.dot(X[i], self.X_train.T)
-      dists[i] = np.sqrt(np.sum((X[i] ** 2 - 2 * dot_product + X_train_sqr, axis=1))
+      product = 2 * np.dot(self.X_train, X[i].T)
+      X_square = np.dot(X[i], X[i].T)
+      dists[i, :] = np.sqrt(X_train_square + X_square - product)
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -129,7 +130,11 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    # np.sum((x_train - x)^2) = np.sum(x_train^2 + x^2 - 2x_train * x) = np.sum of each
+    X_square = np.sum(X**2, axis=1).reshape([-1, 1])
+    X_train_square = np.sum(self.X_train**2, axis=1).reshape([1, -1])
+    product = 2 * np.dot(X, self.X_train.T)
+    dists = np.sqrt(X_train_square + X_square - product)
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
