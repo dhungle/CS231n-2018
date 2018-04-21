@@ -72,7 +72,7 @@ class LinearClassifier(object):
       #                       END OF YOUR CODE                                #
       #########################################################################
 
-      if verbose and it % 100 == 0:
+      if verbose and it % 300 == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
         
     return loss_history
@@ -96,7 +96,7 @@ class LinearClassifier(object):
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    pass
+    y_pred = np.argmax(np.dot(X, self.W), axis = 1)
     ###########################################################################
     #                           END OF YOUR CODE                              #
     ###########################################################################
