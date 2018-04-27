@@ -75,7 +75,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    scores_before_ReLU = np.dot(X, W1) + b1 # After the first layer [N, H]
+    scores_after_ReLU = np.maximum(0, scores_before_ReLU) # After ReLU
+    scores = np.dot(scores_after_ReLU, W2) + b2 # After the second layer [N, C]
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -92,7 +94,11 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    exp_scores = np.exp(scores)
+    y_correct = exp_scores[range(N), list(y)]
+    loss = np.sum(-np.log(y_correct/np.sum(exp_scores, axis=1)))
+    loss /= N
+    loss += reg * (np.sum(W1 ** 2) + np.sum(W2 ** 2))
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -104,7 +110,16 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    dy2 = exp_scores/np.sum(exp_scores, axis=1, keepdims=True)
+    dy2[range(N), y] -= 1
+    grads['W2'] = np.dot(scores_after_ReLU.T, dy2)
+    grads['W2'] /= N
+    grads['W2'] += 2 * reg * W2
+
+    dy1 = np.greater(scores_before_ReLU, 0).astype(int)
+    grads['W1'] = np.dot(X.T, dy1)
+    grads['W1'] /= N
+    grads['W1'] += 2 * reg * W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
