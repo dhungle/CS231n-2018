@@ -104,9 +104,13 @@ class TwoLayerNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         loss, d_fc2 = softmax_loss(scores, y)
-        d_relu1 = affine_backward(d_fc2, cache_fc2)
+        loss += 0.5 * self.reg * (np.sum(self.params['W1'] ** 2) + np.sum(self.params['W2'] ** 2))
+        d_relu1, grads['W2'], grads['b2'] = affine_backward(d_fc2, cache_fc2)
         d_fc1 = relu_backward(d_relu1, cache_relu1)
-        grads = affine_backward(d_fc1, cache_fc1)
+        _, grads['W1'], grads['b1'] = affine_backward(d_fc1, cache_fc1)
+
+        grads['W1'] += self.reg * self.params['W1']
+        grads['W2'] += self.reg * self.params['W2']
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -173,7 +177,10 @@ class FullyConnectedNet(object):
         # beta2, etc. Scale parameters should be initialized to ones and shift     #
         # parameters should be initialized to zeros.                               #
         ############################################################################
-        pass
+        num_neurons = [input_dim] + hidden_dims + [num_classes]
+        for i in range(len(num_neurons) - 1):
+            self.params['W' + str(i + 1)] = np.random.radn(num_neurons[i], num_neurons[i+1])
+            self.params['b' + str(i + 1)] = np.zeros(num_neurons[i+1])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
