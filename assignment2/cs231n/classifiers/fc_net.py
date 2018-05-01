@@ -47,7 +47,11 @@ class TwoLayerNet(object):
         # and biases using the keys 'W1' and 'b1' and second layer                 #
         # weights and biases using the keys 'W2' and 'b2'.                         #
         ############################################################################
-        pass
+        self.params['W1'] = np.random.randn(input_dim, hidden_dim) * weight_scale
+        self.params['W2'] = np.random.randn(hidden_dim, num_classes) * weight_scale
+        self.params['b1'] = np.zeros(hidden_dim)
+        self.params['b2'] = np.zeros(num_classes)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -77,7 +81,9 @@ class TwoLayerNet(object):
         # TODO: Implement the forward pass for the two-layer net, computing the    #
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
-        pass
+        scores, cache_fc1 = affine_forward(X, self.params['W1'], self.params['b1'])
+        scores, cache_relu1 = relu_forward(scores)
+        scores, cache_fc2 = affine_forward(scores, self.params['W2'], self.params['b2'])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -97,7 +103,10 @@ class TwoLayerNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        loss, d_fc2 = softmax_loss(scores, y)
+        d_relu1 = affine_backward(d_fc2, cache_fc2)
+        d_fc1 = relu_backward(d_relu1, cache_relu1)
+        grads = affine_backward(d_fc1, cache_fc1)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
