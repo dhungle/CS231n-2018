@@ -179,7 +179,7 @@ class FullyConnectedNet(object):
         ############################################################################
         num_neurons = [input_dim] + hidden_dims + [num_classes]
         for i in range(len(num_neurons) - 1):
-            self.params['W' + str(i + 1)] = np.random.radn(num_neurons[i], num_neurons[i+1])
+            self.params['W' + str(i + 1)] = np.random.randn(num_neurons[i], num_neurons[i+1]) *weight_scale
             self.params['b' + str(i + 1)] = np.zeros(num_neurons[i+1])
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -239,7 +239,12 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        pass
+        cache = {}
+        scores = X 
+        for i in range(1, self.num_layers + 1):
+            scores, cache['fc'+str(i)] = affine_forward(scores, self.params['W' + str(i)], self.params['b' + str(i)])
+            if i < self.num_layers: # Do not add relu after the last layer
+                scores, cache['relu'+str(i)] = relu_forward(scores)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -262,7 +267,13 @@ class FullyConnectedNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        loss, last_grad = softmax_loss(scores, y)
+        loss += 0.5 * self.reg * sum([np.sum(self.params['W' + str(i)]**2) for i in range(1, self.num_layers + 1)])
+        for i in range(self.num_layers, 0, -1): 
+            if i < self.num_layers:
+                last_grad = relu_backward(last_grad, cache['relu' + str(i)])
+            last_grad, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(last_grad, cache['fc' + str(i)])
+            grads['W' + str(i)] += self.reg * self.params['W' + str(i)]
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
