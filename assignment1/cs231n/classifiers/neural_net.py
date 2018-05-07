@@ -116,7 +116,8 @@ class TwoLayerNet(object):
     grads['W2'] /= N
     grads['W2'] += 2 * reg * W2
 
-    dy1 = np.greater(scores_before_ReLU, 0).astype(int)
+    dy1 = grads['W2'][:]
+    print(dy1.shape, scores_after_ReLU.shape, self.params['W1'])
     grads['W1'] = np.dot(X.T, dy1)
     grads['W1'] /= N
     grads['W1'] += 2 * reg * W1
