@@ -89,7 +89,7 @@ class ThreeLayerConvNet(object):
         # Remember you can use the functions defined in cs231n/fast_layers.py and  #
         # cs231n/layer_utils.py in your implementation (already imported).         #
         ############################################################################
-        pass
+        conv1 = 
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
