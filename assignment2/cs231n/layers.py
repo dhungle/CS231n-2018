@@ -471,8 +471,7 @@ def conv_forward_naive(x, w, b, conv_param):
                 col_in = 0
                 col_out = 0
                 while col_out + WW <= x_padded.shape[3]:
-                    print(x[i, :, row_out: row_out+HH, col_out:col_out+WW].shape, row_out, col_out, col_out + WW)
-                    out[i, j, row_in, col_in] = np.sum(x[i, :, row_out: row_out+HH, col_out:col_out+WW] * w[j]) + b[j]
+                    out[i, j, row_in, col_in] = np.sum(x_padded[i, :, row_out: row_out+HH, col_out:col_out+WW] * w[j]) + b[j]
                     col_in += 1
                     col_out += stride
                 row_in += 1
