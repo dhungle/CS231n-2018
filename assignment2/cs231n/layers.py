@@ -125,7 +125,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     an exponential decay based on the momentum parameter:
 
     running_mean = momentum * running_mean + (1 - momentum) * sample_mean
-    running_var = momentum * running_var + (1 - momentum) * sample_var
+    running_var = momentum * running_var + (1 - momentum) * var
 
     Note that the batch normalization paper suggests a different test-time
     behavior: they compute sample mean and variance for each feature using a
@@ -188,7 +188,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         running_mean = momentum * running_mean + (1 - momentum) * mean
         running_var = momentum * running_var + (1 - momentum) * var
 
-        cache = (x, x_norm, mean, var, gamma, beta)
+        cache = (x, x_norm, mean, var, gamma, beta, eps)
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -238,11 +238,19 @@ def batchnorm_backward(dout, cache):
     # Referencing the original paper (https://arxiv.org/abs/1502.03167)       #
     # might prove to be helpful.                                              #
     ###########################################################################
-    x, x_norm, mean, var, gamma, beta = cache
+    x, x_norm, mean, var, gamma, beta, eps = cache
     dbeta = np.sum(dout, axis=0) 
     dgamma = np.sum(dout * x_norm, axis=0)
-    dx_norm = dout * gamma
-    dx = dx_norm * np.sqrt(var)
+
+    N = x.shape[0]
+    dx_norm = dout * gamma 
+    dx_minus_mean = np.ones_like(x) - 1/N 
+    dx_variance = 2/N * (x - mean) * dx_minus_mean
+    d_denom = 0.5 * (var + eps) ** -0.5 * dx_variance
+    numerator = x - mean 
+    denom = np.sqrt(var + eps)
+    dx = dx_norm * ((dx_minus_mean * denom) - (numerator * d_denom))/(denom ** 2)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -273,7 +281,11 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a     #
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
-    pass
+    x, x_norm, mean, var, gamma, beta, eps = cache
+    dbeta = np.sum(dout, axis=0) 
+    dgamma = np.sum(dout * x_norm, axis=0)
+    N = x.shape[0]
+    dx = 1/N * gamma * (var + eps)**-0.5 * (N * dout - np.sum(dout, axis=0) - (x - mean) * (var + eps)**-1 * np.sum(dout * (x - mean), axis=0))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
