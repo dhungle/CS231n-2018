@@ -244,13 +244,23 @@ def batchnorm_backward(dout, cache):
 
     N = x.shape[0]
     dx_norm = dout * gamma 
-    dx_minus_mean = np.ones_like(x) - 1/N 
-    dx_variance = 2/N * (x - mean) * dx_minus_mean
-    d_denom = 0.5 * (var + eps) ** -0.5 * dx_variance
-    numerator = x - mean 
-    denom = np.sqrt(var + eps)
-    dx = dx_norm * ((dx_minus_mean * denom) - (numerator * d_denom))/(denom ** 2)
-
+    dx = np.zeros_like(x)
+    # The hard part begins, it is more efficient to cache everything from forward pass, but to make the backward calculation more easily to understand, I calculate many things again below
+    mean = 1/N * np.sum(x, axis=0)
+    x_norm_num = x - mean 
+    sqr_error = x_norm_num ** 2
+    var = 1/N * np.sum(sqr_error, axis=0) 
+    x_norm_denom = np.sqrt(var + eps)
+    x_norm_denom_inv = 1/x_norm_denom
+    dx_norm_num = dx_norm * x_norm_denom_inv
+    dx_norm_denom_inv = np.sum(dx_norm * x_norm_num, axis=0)
+    dx_norm_denom = dx_norm_denom_inv * -1/(x_norm_denom**2)
+    d_var = dx_norm_denom * 0.5 * (var + eps) ** -0.5
+    d_sqr_error = 1/N * np.ones_like(sqr_error) * d_var 
+    dx_norm_num += 2 * x_norm_num * d_sqr_error
+    dx = dx_norm_num
+    dmean = -np.sum(dx_norm_num, axis=0)
+    dx += 1/N * dmean * np.ones_like(dmean)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
