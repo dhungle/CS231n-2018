@@ -244,6 +244,11 @@ class FullyConnectedNet(object):
         for i in range(1, self.num_layers + 1):
             scores, cache['fc'+str(i)] = affine_forward(scores, self.params['W' + str(i)], self.params['b' + str(i)])
             if i < self.num_layers: # Do not add relu after the last layer
+                if self.normalization == "batchnorm":
+                    D = scores.shape[1]
+                    bn_param['running_mean'] = np.zeros(D)
+                    bn_param['running_var'] = np.zeros(D)
+                    scores, cache['bn'+str(i)] = batchnorm_forward(scores, np.random.randn(D), np.random.randn(D), bn_param)
                 scores, cache['relu'+str(i)] = relu_forward(scores)
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -272,6 +277,8 @@ class FullyConnectedNet(object):
         for i in range(self.num_layers, 0, -1): 
             if i < self.num_layers:
                 last_grad = relu_backward(last_grad, cache['relu' + str(i)])
+                if self.normalization == "batchnorm":
+                    last_grad = batchnorm_backward(last_grad, cache['bn'+str(i)])
             last_grad, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(last_grad, cache['fc' + str(i)])
             grads['W' + str(i)] += self.reg * self.params['W' + str(i)]
         ############################################################################
