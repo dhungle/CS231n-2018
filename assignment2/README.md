@@ -107,4 +107,3 @@ cd DEST_PATH
 /afs/ir/class/cs231n/submit
 ```
 Once you run the submit script, simply follow the on-screen prompts to finish submitting the assignment on AFS. If successful, you should see a "SUBMIT SUCCESS" message output by the script.
-
