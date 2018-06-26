@@ -246,11 +246,13 @@ class FullyConnectedNet(object):
         scores = X 
         for i in range(1, self.num_layers + 1):
             scores, cache['fc'+str(i)] = affine_forward(scores, self.params['W' + str(i)], self.params['b' + str(i)])
-            if i < self.num_layers: # Do not add relu after the last layer
+            if i < self.num_layers: # Do not add relu, batchnorm, dropout after the last layer
                 if self.normalization == "batchnorm":
                     D = scores.shape[1]
                     scores, cache['bn'+str(i)] = batchnorm_forward(scores, self.params['gamma'+str(i)], self.params['beta'+str(i)], self.bn_params[i-1]) # self.bn_params[i-1] since the provided code above initilizes bn_params for layers from index 0, here we index layer from 1. 
                 scores, cache['relu'+str(i)] = relu_forward(scores)
+                if self.use_dropout:
+                    scores, cache['dropout'+str(i)] = dropout_forward(scores, self.dropout_param)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -275,7 +277,9 @@ class FullyConnectedNet(object):
         loss, last_grad = softmax_loss(scores, y)
         loss += 0.5 * self.reg * sum([np.sum(self.params['W' + str(i)]**2) for i in range(1, self.num_layers + 1)])
         for i in range(self.num_layers, 0, -1): 
-            if i < self.num_layers:
+            if i < self.num_layers: # No ReLU, dropout, Batchnorm for the last layer
+                if self.use_dropout:
+                    last_grad = dropout_backward(last_grad, cache['dropout' + str(i)])
                 last_grad = relu_backward(last_grad, cache['relu' + str(i)])
                 if self.normalization == "batchnorm":
                     last_grad, grads['gamma'+str(i)], grads['beta'+str(i)] = batchnorm_backward(last_grad, cache['bn'+str(i)])
