@@ -179,8 +179,11 @@ class FullyConnectedNet(object):
         ############################################################################
         num_neurons = [input_dim] + hidden_dims + [num_classes]
         for i in range(len(num_neurons) - 1):
-            self.params['W' + str(i + 1)] = np.random.randn(num_neurons[i], num_neurons[i+1]) *weight_scale
+            self.params['W' + str(i + 1)] = np.random.randn(num_neurons[i], num_neurons[i+1]) * weight_scale
             self.params['b' + str(i + 1)] = np.zeros(num_neurons[i+1])
+            if self.normalization=='batchnorm' and i < len(num_neurons) - 2:
+                self.params['beta' + str(i + 1)] = np.zeros([num_neurons[i+1]])
+                self.params['gamma' + str(i + 1)] = np.ones([num_neurons[i+1]])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -246,14 +249,11 @@ class FullyConnectedNet(object):
             if i < self.num_layers: # Do not add relu after the last layer
                 if self.normalization == "batchnorm":
                     D = scores.shape[1]
-                    bn_param['running_mean'] = np.zeros(D)
-                    bn_param['running_var'] = np.zeros(D)
-                    scores, cache['bn'+str(i)] = batchnorm_forward(scores, np.random.randn(D), np.random.randn(D), bn_param)
+                    scores, cache['bn'+str(i)] = batchnorm_forward(scores, self.params['gamma'+str(i)], self.params['beta'+str(i)], self.bn_params[i-1]) # self.bn_params[i-1] since the provided code above initilizes bn_params for layers from index 0, here we index layer from 1. 
                 scores, cache['relu'+str(i)] = relu_forward(scores)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
-
         # If test mode return early
         if mode == 'test':
             return scores
@@ -278,7 +278,7 @@ class FullyConnectedNet(object):
             if i < self.num_layers:
                 last_grad = relu_backward(last_grad, cache['relu' + str(i)])
                 if self.normalization == "batchnorm":
-                    last_grad = batchnorm_backward(last_grad, cache['bn'+str(i)])
+                    last_grad, grads['gamma'+str(i)], grads['beta'+str(i)] = batchnorm_backward(last_grad, cache['bn'+str(i)])
             last_grad, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(last_grad, cache['fc' + str(i)])
             grads['W' + str(i)] += self.reg * self.params['W' + str(i)]
         ############################################################################
